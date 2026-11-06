@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>MyInstants & Downloader</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #e74c3c; 
+            --primary-bg: rgba(231, 76, 60, 0.1);
+        }
+
+        html, body { 
+            background-color: #121212; 
+            color: #ccc; 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            font-size: 13px; 
+            height: 100%; 
+            margin: 0; 
+            padding: 8px; 
+            box-sizing: border-box; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
+        
+        .tabs { display: flex; border-bottom: 1px solid #333; margin-bottom: 10px; flex-shrink: 0; }
+        .tab-btn { flex: 1; padding: 8px 4px; background: transparent; color: #888; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; text-align: center; font-size: 11.5px; }
+        .tab-btn i { margin-right: 4px; }
+        .tab-btn:hover { color: #fff; }
+        .tab-btn.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
+        
+        .tab-content { display: none; flex-direction: column; flex-grow: 1; overflow: hidden; }
+        .tab-content.active { display: flex; }
+        
+        input[type="text"], select { width: 100%; padding: 9px; box-sizing: border-box; background: #1e1e1e; border: 1px solid #333; color: #fff; margin-bottom: 8px; border-radius: 6px; outline: none; flex-shrink: 0;}
+        input[type="text"]:focus, select:focus { border-color: var(--primary); }
+        
+        .btn-main { width: 100%; padding: 9px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; flex-shrink: 0; }
+        .btn-main i { margin-right: 5px; }
+        .btn-main:hover { opacity: 0.85; }
+        
+        #sfxResults { flex-grow: 1; overflow-y: auto; margin-top: 5px; padding-right: 4px; }
+        #sfxResults::-webkit-scrollbar { width: 6px; }
+        #sfxResults::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+        
+        .sound-item { display: flex; align-items: center; background: #1a1a1a; padding: 10px; margin-bottom: 8px; border-radius: 8px; border: 1px solid #2a2a2a; transition: all 0.2s ease; flex-shrink: 0; }
+        .sound-item:hover { background: #252525; border-color: #444; }
+        
+        .play-btn { width: 34px; height: 34px; border-radius: 50%; background: #333; display: flex; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; transition: 0.2s; }
+        .play-btn svg { width: 14px; height: 14px; fill: #fff; }
+        .play-btn:hover { background: var(--primary); }
+        
+        .sound-info { margin-left: 10px; flex-grow: 1; overflow: hidden; }
+        .sound-title { font-weight: 600; font-size: 12.5px; color: #eee; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .waveform-wrapper { display: flex; align-items: flex-end; }
+        .waveform-container { display: flex; align-items: flex-end; height: 22px; gap: 2px; flex-grow: 1; cursor: pointer; }
+        .wave-bar { flex: 1; background: #444; border-radius: 2px; }
+        .time-display { font-size: 10.5px; color: #888; width: 35px; text-align: right; margin-left: 8px; }
+        
+        .btn-dl { background: transparent; border: 1px solid #555; color: #fff; padding: 6px 12px; margin-left: 8px; border-radius: 20px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s; flex-shrink: 0; }
+        .btn-dl:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-bg); }
+        
+        .setting-box { background: #1a1a1a; border: 1px solid #333; padding: 8px; border-radius: 6px; display: flex; align-items: center; gap: 8px; }
+        .setting-box input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--primary); cursor: pointer; }
+        .setting-box label { font-size: 11.5px; color: #ccc; cursor: pointer; user-select: none; }
+        .settings-label { display: block; margin-bottom: 4px; color: #aaa; font-size: 11px; font-weight: bold; }
+        .update-card { margin: 12px 0 8px; padding: 10px; background: #181818; border: 1px solid #333; border-radius: 7px; }
+        .update-status { min-height: 16px; margin: 6px 0 8px; color: #aaa; font-size: 10.5px; line-height: 1.4; }
+        .explore-toolbar, .chip-row { display:flex; gap:5px; flex-shrink:0; overflow-x:auto; padding-bottom:5px; }
+        .icon-btn, .chip, .star-btn { background:#222; border:1px solid #444; color:#aaa; border-radius:6px; cursor:pointer; }
+        .icon-btn { width:30px; min-width:30px; }
+        .icon-btn:disabled { opacity:.35; cursor:default; }
+        .chip { padding:5px 8px; white-space:nowrap; font-size:10.5px; }
+        .chip.active { color:#fff; border-color:var(--primary); background:var(--primary-bg); }
+        .star-btn { border:none; background:transparent; padding:5px; font-size:15px; }
+        .star-btn.active { color:#f1c40f; }
+        .update-badge { display:none; margin-left:3px; color:#fff; background:#e74c3c; border-radius:8px; padding:1px 5px; font-size:8px; }
+        
+        .platform-note { font-size: 11px; color: #aaa; margin-bottom: 10px; background: #1a1a1a; padding: 8px; border-radius: 6px; border: 1px solid #333; line-height: 1.4; flex-shrink: 0; }
+        .platform-note span { color: var(--primary); font-weight: bold; }
+
+        .scrollable-tab { overflow-y: auto; flex-grow: 1; padding-right: 2px; }
+        .scrollable-tab::-webkit-scrollbar { width: 5px; }
+        .scrollable-tab::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+        .donation-section { margin-top: 5px; }
+        .donation-title { font-size: 11.5px; font-weight: bold; color: var(--primary); margin-bottom: 8px; text-transform: uppercase; }
+        .donation-card { background: #181818; border: 1px solid #2a2a2a; border-radius: 8px; padding: 8px 10px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+        .donation-icon { width: 32px; height: 32px; border-radius: 6px; object-fit: contain; background: #222; padding: 3px; flex-shrink: 0; }
+        .donation-info { flex-grow: 1; font-size: 10.5px; line-height: 1.35; color: #aaa; }
+        .donation-info b { color: #fff; font-size: 11px; }
+        
+        .qr-thumb { width: 38px; height: 38px; border-radius: 4px; object-fit: cover; cursor: pointer; border: 1px solid #444; flex-shrink: 0; }
+        .qr-thumb:hover { border-color: var(--primary); }
+
+        #qrModal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); justify-content: center; align-items: center; }
+        #qrModal img { max-width: 85%; max-height: 85%; border-radius: 8px; border: 2px solid #fff; }
+
+        .log-section { flex-shrink: 0; margin-top: auto; border-top: 1px solid #333; padding-top: 6px; }
+        .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .log-actions { display: flex; gap: 5px; }
+        .btn-icon-action { background: transparent; border: 1px solid #444; color: #aaa; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; font-size: 10px; display: flex; justify-content: center; align-items: center; transition: 0.2s; }
+        .btn-icon-action:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+        
+        #log { padding: 8px; background: #0a0a0a; color: #0f0; height: 85px; overflow-y: auto; border: 1px solid #222; border-radius: 6px; font-family: monospace; font-size: 10.5px; box-sizing: border-box; }
+        #log.collapsed { display: none; }
+    </style>
+</head>
+<body>
+    <div class="tabs">
+        <button class="tab-btn active" id="tabMyInstants"><i class="fa-solid fa-volume-high"></i> MyInstants</button>
+        <button class="tab-btn" id="tabFavorites"><i class="fa-solid fa-star"></i> <span data-i18n="favorites">Favorites</span></button>
+        <button class="tab-btn" id="tabYoutube"><i class="fa-solid fa-cloud-arrow-down"></i> Downloader</button>
+        <button class="tab-btn" id="tabSettings"><i class="fa-solid fa-gear"></i> Settings <span id="updateBadge" class="update-badge">!</span></button>
+        <button class="tab-btn" id="tabDonation"><i class="fa-solid fa-mug-hot"></i> Donate</button>
+    </div>
+
+    <!-- TAB 1: MYINSTANTS -->
+    <div id="contentMyInstants" class="tab-content active">
+        <div class="explore-toolbar" style="margin-bottom:5px;">
+            <button id="btnHistoryBack" class="icon-btn" title="Back" disabled><i class="fa-solid fa-arrow-left"></i></button>
+            <button id="btnHistoryForward" class="icon-btn" title="Forward" disabled><i class="fa-solid fa-arrow-right"></i></button>
+            <input type="text" id="sfxKeyword" data-i18n-placeholder="searchPlaceholder" placeholder="Type to search SFX..." style="margin-bottom: 0;">
+            <button id="btnSearchSfx" class="btn-main" style="width: 85px;"><i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="btnSearch">Search</span></button>
+        </div>
+        <div id="categoryChips" class="chip-row"></div>
+        <div id="tagChips" class="chip-row"></div>
+        <div id="sfxResults"><div style="text-align: center; color: var(--primary); padding: 20px;" data-i18n="loadingSfx">Loading trending audio...</div></div>
+    </div>
+
+    <div id="contentFavorites" class="tab-content">
+        <div style="font-weight:bold;color:var(--primary);margin-bottom:8px;" data-i18n="favoritesTitle">Favorite sounds</div>
+        <div id="favoriteResults" style="flex-grow:1;overflow-y:auto;"></div>
+    </div>
+
+    <!-- TAB 2: YOUTUBE DOWNLOADER -->
+    <div id="contentYoutube" class="tab-content">
+        <div class="platform-note">
+            <span data-i18n="supportedPlatforms">Supported:</span> YouTube, TikTok, FB Reels, SoundCloud, Twitter, Reddit...
+        </div>
+        <input type="text" id="ytUrl" data-i18n-placeholder="urlPlaceholder" placeholder="Paste link here...">
+        
+        <select id="ytFormat">
+            <option value="video_best"><i class="fa-solid fa-video"></i> <span data-i18n="optVideo">Best Video (Merged Audio + Video)</span></option>
+            <option value="audio_m4a"><i class="fa-solid fa-music"></i> <span data-i18n="optAudio">Audio Only (M4A - Fast & Smooth)</span></option>
+        </select>
+
+        <button id="btnYtDownload" class="btn-main"><i class="fa-solid fa-download"></i> <span data-i18n="btnDownload">Download</span></button>
+    </div>
+
+    <!-- TAB 3: SETTINGS -->
+    <div id="contentSettings" class="tab-content scrollable-tab">
+        <div style="margin-bottom: 10px;">
+            <label style="display: block; margin-bottom: 4px; color: #aaa; font-size: 11px; font-weight: bold;"><i class="fa-solid fa-globe"></i> <span data-i18n="lblLanguage">LANGUAGE:</span></label>
+            <select id="langSelect">
+                <option value="en">English</option>
+                <option value="vi">Tiếng Việt</option>
+            </select>
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label style="display: block; margin-bottom: 4px; color: #aaa; font-size: 11px; font-weight: bold;"><i class="fa-solid fa-palette"></i> <span data-i18n="lblTheme">THEME COLOR:</span></label>
+            <input type="color" id="colorPicker" value="#e74c3c" style="width: 100%; height: 32px; border: none; cursor: pointer; background: transparent;">
+        </div>
+        <div style="margin-bottom: 12px;">
+            <label style="display: block; margin-bottom: 4px; color: #aaa; font-size: 11px; font-weight: bold;"><i class="fa-solid fa-folder-open"></i> <span data-i18n="lblSavePath">DOWNLOAD DIRECTORY:</span></label>
+            <div style="display: flex; gap: 5px;">
+                <input type="text" id="customPath" data-i18n-placeholder="pathPlaceholder" placeholder="Leave blank = Save with Project" readonly style="margin-bottom:0; font-size: 11px;">
+                <button id="btnBrowse" class="btn-main" style="width: 45px;"><i class="fa-solid fa-ellipsis"></i></button>
+            </div>
+            <button id="btnClearPath" class="btn-main" style="margin-top: 4px; background: #444; font-size: 10px; padding: 5px;"><i class="fa-solid fa-rotate-left"></i> <span data-i18n="btnResetPath">Reset to Project Folder</span></button>
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label class="settings-label"><i class="fa-solid fa-key"></i> <span data-i18n="lblApiToken">MYINSTANTS API TOKEN:</span></label>
+            <div style="display:flex;gap:5px;"><input type="password" id="sfxApiToken" data-i18n-placeholder="tokenPlaceholder" placeholder="Optional token" style="width:100%;padding:9px;background:#1e1e1e;border:1px solid #333;color:#fff;border-radius:6px;"><button id="btnClearToken" class="btn-main" style="width:48px;background:#444;"><i class="fa-solid fa-xmark"></i></button></div>
+        </div>
+        <div class="update-card">
+            <label class="settings-label"><i class="fa-solid fa-rotate"></i> <span data-i18n="lblUpdater">EXTENSION UPDATE:</span></label>
+            <div id="updateStatus" class="update-status" data-i18n="updateReady">Checking GitHub Releases...</div>
+            <button id="btnCheckUpdate" class="btn-main" style="background:#2980b9;"><i class="fa-solid fa-cloud-arrow-down"></i> <span data-i18n="btnCheckUpdate">Check & Update</span></button>
+        </div>
+        <button id="btnSaveSettings" class="btn-main" style="margin-top: 5px;"><i class="fa-solid fa-floppy-disk"></i> <span data-i18n="btnSaveSettings">Save Settings</span></button>
+    </div>
+
+    <!-- TAB 4: DONATION -->
+    <div id="contentDonation" class="tab-content scrollable-tab">
+        <div class="donation-section">
+            <div class="donation-title" data-i18n="donationTitle"><i class="fa-solid fa-heart" style="color:var(--primary);"></i> Support Author</div>
+            
+            <!-- OCB Bank Card -->
+            <div class="donation-card">
+                <div class="donation-icon" style="background:#fff; display:flex; align-items:center; justify-content:center; font-weight:bold; color:#002b49; font-size:11px;">OCB</div>
+                <div class="donation-info">
+                    <b>OCB (NGUYEN THANH TINH)</b><br>
+                    STK: <span style="color:#fff;">0869262402</span>
+                </div>
+                <img src="QRBANK.jpg" class="qr-thumb" data-qr="QRBANK.jpg" alt="QR OCB" title="Click to enlarge">
+            </div>
+
+            <!-- MoMo Card -->
+            <div class="donation-card">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/a/a0/MoMo_Logo_App.svg" class="donation-icon" alt="MoMo">
+                <div class="donation-info">
+                    <b>MoMo (NGUYEN THANH TINH)</b><br>
+                    SĐT: <span style="color:#fff;">0869262402</span>
+                </div>
+                <img src="QRMOMO.jpg" class="qr-thumb" data-qr="QRMOMO.jpg" alt="QR MoMo" title="Click to enlarge">
+            </div>
+
+            <!-- PayPal Card -->
+            <div class="donation-card">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" class="donation-icon" alt="PayPal" style="background: #fff;">
+                <div class="donation-info">
+                    <b>PayPal Donation</b><br>
+                    <span style="color: #3498db;">ntt24021998@gmail.com</span>
+                </div>
+            </div>
+
+            <!-- Binance Card -->
+            <div class="donation-card">
+                <img src="https://s3.tradingview.com/userpics/46809822-Dl21_big.png" class="donation-icon" alt="Binance" style="background: #f39c1215;">
+                <div class="donation-info">
+                    <b>Binance Pay</b><br>
+                    PayID: <span style="color: #f39c12;">215231045</span>
+                </div>
+                <img src="QRBINANCE.jpg" class="qr-thumb" data-qr="QRBINANCE.jpg" alt="QR Binance" title="Click to enlarge">
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL POPUP PHÓNG LỚN QR -->
+    <div id="qrModal">
+        <img src="" id="qrModalImg" alt="Expanded QR">
+    </div>
+
+    <!-- KHU VỰC LOG & CÀI ĐẶT TIMELINE Ở ĐÁY -->
+    <div class="log-section">
+        <div class="log-header">
+            <div class="setting-box" style="padding: 0; border: none; background: transparent;">
+                <input type="checkbox" id="autoInsertTimeline" checked>
+                <label for="autoInsertTimeline" data-i18n="autoInsertTimeline">Auto insert into Timeline</label>
+            </div>
+            <div class="log-actions">
+                <button class="btn-icon-action" id="btnClearLog" title="Clear Log"><i class="fa-solid fa-trash-can"></i></button>
+                <button class="btn-icon-action" id="btnToggleLog" title="Toggle Log"><i class="fa-solid fa-chevron-down" id="toggleLogIcon"></i></button>
+            </div>
+        </div>
+        <div id="log" data-i18n="readyLog">Ready to work</div>
+    </div>
+
+    <script src="js/CSInterface.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        const modal = document.getElementById('qrModal');
+        const modalImg = document.getElementById('qrModalImg');
+        document.querySelectorAll('.qr-thumb').forEach(thumb => {
+            thumb.onclick = function() {
+                modalImg.src = this.getAttribute('data-qr');
+                modal.style.display = 'flex';
+            };
+        });
+        if(modal) {
+            modal.onclick = () => { modal.style.display = 'none'; };
+        }
+
+        const toggleBtn = document.getElementById('btnToggleLog');
+        const logBox = document.getElementById('log');
+        const toggleIcon = document.getElementById('toggleLogIcon');
+        if(toggleBtn && logBox && toggleIcon) {
+            toggleBtn.onclick = () => {
+                if(logBox.classList.contains('collapsed')) {
+                    logBox.classList.remove('collapsed');
+                    toggleIcon.className = "fa-solid fa-chevron-down";
+                } else {
+                    logBox.classList.add('collapsed');
+                    toggleIcon.className = "fa-solid fa-chevron-up";
+                }
+            };
+        }
+    </script>
+</body>
+</html>
