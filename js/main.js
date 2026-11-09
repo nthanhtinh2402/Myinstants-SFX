@@ -730,7 +730,7 @@ function officialRequest(url, retries = 2, extraHeaders = {}) {
     const isMyInstants = /^https:\/\/www\.myinstants\.com\//i.test(url);
     if (apiCache.has(url)) { if (isMyInstants) log(`[API cache] ${new URL(url).search}`, "#7f8c8d"); return Promise.resolve(apiCache.get(url)); }
     return new Promise((resolve, reject) => {
-        const headers = Object.assign({"User-Agent":"MyInstants-SFX-CEP/1.4.0", "Accept":"application/json"}, extraHeaders);
+        const headers = Object.assign({"User-Agent":"MyInstants-SFX-CEP/1.4.1", "Accept":"application/json"}, extraHeaders);
         const token = localStorage.getItem("sfxApiToken");
         if (token && isMyInstants) headers.Authorization = /^Token |^Bearer /i.test(token) ? token : `Token ${token}`;
         if (isMyInstants) recordApiRequest(!!token,url);
@@ -756,7 +756,7 @@ function officialRequest(url, retries = 2, extraHeaders = {}) {
 function fetchBinary(url, redirects = 0) {
     return new Promise((resolve, reject) => {
         if (redirects > 8) return reject(new Error("Too many redirects"));
-        https.get(url, {headers:{"User-Agent":"MyInstants-SFX-Updater/1.4.0","Accept":"*/*"}}, res => {
+        https.get(url, {headers:{"User-Agent":"MyInstants-SFX-Updater/1.4.1","Accept":"*/*"}}, res => {
             if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
                 res.resume(); return fetchBinary(new URL(res.headers.location, url).toString(), redirects + 1).then(resolve, reject);
             }

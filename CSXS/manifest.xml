@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ExtensionManifest Version="7.0" ExtensionBundleId="com.myinstants.cep" ExtensionBundleVersion="1.4.0" ExtensionBundleName="MyInstants SFX">
+<ExtensionManifest Version="7.0" ExtensionBundleId="com.myinstants.cep" ExtensionBundleVersion="1.4.1" ExtensionBundleName="MyInstants SFX">
     <ExtensionList>
-        <Extension Id="com.myinstants.cep.panel" Version="1.4.0" />
+        <Extension Id="com.myinstants.cep.panel" Version="1.4.1" />
     </ExtensionList>
     <ExecutionEnvironment>
         <HostList>

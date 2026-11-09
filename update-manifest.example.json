@@ -1,9 +1,9 @@
 {
   "repository": "OWNER/REPOSITORY",
-  "tag": "v1.4.0",
+  "tag": "v1.4.1",
   "requiredAssets": [
-    "MyInstants-SFX-v1.4.0.zip",
-    "MyInstants-SFX-v1.4.0.zip.sha256"
+    "MyInstants-SFX-v1.4.1.zip",
+    "MyInstants-SFX-v1.4.1.zip.sha256"
   ],
   "note": "Documentation only. The updater reads the latest public GitHub Release directly."
 }
